@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie Night Generator</title>
+    <link rel="stylesheet" href="finalstyle.css" />
+    <!-- swiper css for the movie slider -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    />
+  </head>
+
+  <body>
+    <!-- nav bar at the top -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <h2>Movie Night Generator</h2>
+        </div>
+        <nav class="nav-menu">
+          <a href="index.html" class="nav-link active">Home</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="movies.html" class="nav-link">Movie Generator</a>
+          <a href="saved.html" class="nav-link">Saved Movies</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- big intro section -->
+    <main class="about-main">
+      <section class="about-hero">
+        <div class="container">
+          <h1 class="about-title">Find Your Perfect Movie</h1>
+          <p class="about-subtitle">
+            Tired of scrolling? Get quick movie picks made just for you.
+          </p>
+          <a href="movies.html" class="cta-button">Start Generating</a>
+        </div>
+      </section>
+
+      <!-- why this is helpful -->
+      <section class="about-section features-section">
+        <div class="container">
+          <h2>Why Use This?</h2>
+          <div class="features-grid">
+            <div class="feature-card">
+              <h3>🎯 Smart Picks</h3>
+              <p>Pick a mood or genre and we’ll suggest movies.</p>
+            </div>
+            <div class="feature-card">
+              <h3>💾 Save Favorites</h3>
+              <p>Click save to build your own watchlist.</p>
+            </div>
+            <div class="feature-card">
+              <h3>🌟 Random Pick</h3>
+              <p>Feeling lucky? We’ll surprise you with a random movie.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- get started -->
+      <section class="about-cta">
+        <div class="container">
+          <h2>Let’s Pick Your Movie</h2>
+          <p>Click below and we’ll help you choose.</p>
+          <a href="movies.html" class="cta-button">Try The Generator</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- featured movies slider -->
+    <section class="about-section">
+      <div class="container">
+        <h2 style="text-align: center">🎬 Featured Movies</h2>
+        <div class="swiper mySwiper">
+          <div class="swiper-wrapper" id="featured-swiper"></div>
+          <div class="swiper-button-next"></div>
+          <div class="swiper-button-prev"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- footer info -->
+    <footer class="footer">
+      <div class="container">
+        <p>Movie Night Generator by Hadiya Mohammed</p>
+        <p>
+          Movie info from
+          <a href="https://www.themoviedb.org/" target="_blank">TMDB</a>
+        </p>
+      </div>
+    </footer>
+
+    <!-- swiper js for the slider -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- main scripts -->
+    <script src="swiper.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

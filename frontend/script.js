@@ -12,13 +12,11 @@ const supabaseClient = createClient(
 document.addEventListener("DOMContentLoaded", async () => {
   const genreSelect = document.getElementById("genre-select");
 
-  // fetch genres from TMDB
   try {
     const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
     const data = await response.json();
     genreList = data.genres;
 
-    // populate dropdown if it exists
     if (genreSelect) {
       genreList.forEach((genre) => {
         const option = document.createElement("option");
@@ -31,13 +29,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("failed to load genres", err);
   }
 
-  // load saved movies if we're on the saved page
+  // run only on saved.html
   if (window.location.pathname.includes('saved.html')) {
     loadSavedMovies();
   }
 });
 
-// get movies by genre
+// get movies from selected genre
 async function getMovies() {
   const genreId = document.getElementById("genre-select").value;
   const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`);
@@ -45,7 +43,7 @@ async function getMovies() {
   displayMovies(data.results);
 }
 
-// display movie cards
+// show movie cards
 function displayMovies(movies) {
   const container = document.getElementById("movies-container");
   container.innerHTML = "";
@@ -63,14 +61,10 @@ function displayMovies(movies) {
   });
 }
 
-// save movie to supabase
+// save a movie to supabase (with safe genre handling)
 async function saveMovie(movie) {
-  if (!genreList.length) {
-    console.warn("genre list not loaded yet.");
-    return;
-  }
-
-  const genreNames = movie.genre_ids.map(id => {
+  const genreIds = Array.isArray(movie.genre_ids) ? movie.genre_ids : [];
+  const genreNames = genreIds.map(id => {
     const match = genreList.find(g => g.id === id);
     return match ? match.name : "Unknown";
   });
@@ -80,7 +74,7 @@ async function saveMovie(movie) {
     .insert([{
       title: movie.title,
       overview: movie.overview || "no description available.",
-      genres: genreNames.join(', ')
+      genres: genreNames.length ? genreNames.join(', ') : "Unknown"
     }]);
 
   if (error) {
@@ -149,7 +143,7 @@ async function loadSavedMovies() {
   drawChart(data);
 }
 
-// pie chart for genres
+// draw pie chart
 function drawChart(data) {
   const ctx = document.getElementById('movieChart');
   if (!ctx) return;
@@ -190,7 +184,7 @@ function drawChart(data) {
   });
 }
 
-// remove movie
+// delete a saved movie
 async function removeMovie(id) {
   const { error } = await supabaseClient
     .from('likedMovies')

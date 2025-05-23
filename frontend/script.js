@@ -8,7 +8,7 @@ const supabaseClient = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZydHJmdmZtZWJ5cGJtb3lmemZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MjA3ODIsImV4cCI6MjA2MzQ5Njc4Mn0.9pCPmOV7gZHFqkAJm0GSX1pD1PQaSEw-x1eP_tNYwKk'
 );
 
-// show genres in dropdown on load
+// load genre list on page load
 document.addEventListener("DOMContentLoaded", async () => {
   const genreSelect = document.getElementById("genre-select");
   if (!genreSelect) return;
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// get movies by selected genre
+// get movies for selected genre
 async function getMovies() {
   const genreId = document.getElementById("genre-select").value;
   const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`);
@@ -33,7 +33,7 @@ async function getMovies() {
   displayMovies(data.results);
 }
 
-// display movie cards
+// show movie cards
 function displayMovies(movies) {
   const container = document.getElementById("movies-container");
   container.innerHTML = "";
@@ -74,7 +74,7 @@ async function saveMovie(movie) {
   }
 }
 
-// get random movie
+// get a random movie from a random genre
 async function getRandomMovie() {
   if (genreList.length === 0) return;
 
@@ -98,7 +98,7 @@ function displayRandomMovie(movie) {
   container.querySelector("button").addEventListener("click", () => saveMovie(movie));
 }
 
-// load saved movies
+// load saved movies from supabase
 async function loadSavedMovies() {
   const savedContainer = document.getElementById("saved-movies-container");
   const emptyMessage = document.getElementById("empty-message");
@@ -132,7 +132,7 @@ async function loadSavedMovies() {
   drawChart(data);
 }
 
-// draw pie chart
+// draw pie chart of saved genres
 function drawChart(data) {
   const ctx = document.getElementById('movieChart');
   if (!ctx) return;
@@ -173,7 +173,7 @@ function drawChart(data) {
   });
 }
 
-// remove a movie
+// delete a movie
 async function removeMovie(id) {
   const { error } = await supabaseClient
     .from('likedMovies')
@@ -189,7 +189,7 @@ async function removeMovie(id) {
   }
 }
 
-// run only on saved.html
+// only run this when you're on saved.html
 if (window.location.pathname.includes('saved.html')) {
   loadSavedMovies();
 }

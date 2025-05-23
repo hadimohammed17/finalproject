@@ -1,201 +1,65 @@
-const apiKey = '71687fee99c471fead84b44849e2b6ad';
-let genreList = [];
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saved Movies</title>
+    <link rel="stylesheet" href="finalstyle.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js" defer></script>
+  </head>
 
-// connect to supabase
-const { createClient } = supabase;
-const supabaseClient = createClient(
-  'https://vrtrfvfmebypbmoyfzfr.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZydHJmdmZtZWJ5cGJtb3lmemZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MjA3ODIsImV4cCI6MjA2MzQ5Njc4Mn0.9pCPmOV7gZHFqkAJm0GSX1pD1PQaSEw-x1eP_tNYwKk'
-);
+  <body>
+    <!-- top nav -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <h2>Movie Night Generator</h2>
+        </div>
+        <nav class="nav-menu">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="about.html" class="nav-link">About</a>
+          <a href="movies.html" class="nav-link">Movie Generator</a>
+          <a href="saved.html" class="nav-link active">Saved Movies</a>
+        </nav>
+      </div>
+    </header>
 
-// load genre list on page load
-document.addEventListener("DOMContentLoaded", async () => {
-  const genreSelect = document.getElementById("genre-select");
+    <!-- saved movies section -->
+    <main class="about-main">
+      <section class="about-section">
+        <div class="container">
+          <h1 class="about-title">Your Saved Movies</h1>
+          <p>Here are the movies you've liked. You can come back to them anytime.</p>
 
-  try {
-    const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
-    const data = await response.json();
-    genreList = data.genres;
+          <!-- saved movie cards go here -->
+          <div id="saved-movies-container" class="features-grid"></div>
 
-    if (genreSelect) {
-      genreList.forEach((genre) => {
-        const option = document.createElement("option");
-        option.value = genre.id;
-        option.textContent = genre.name;
-        genreSelect.appendChild(option);
-      });
-    }
-  } catch (err) {
-    console.error("failed to load genres", err);
-  }
+          <!-- message when no movies are saved -->
+          <p id="empty-message" style="text-align: center; color: #94a3b8; margin-top: 2rem">
+            No saved movies yet.
+          </p>
+        </div>
+      </section>
 
-  // run only on saved.html
-  if (window.location.pathname.includes('saved.html')) {
-    loadSavedMovies();
-  }
-});
+      <!-- chart section -->
+      <section class="about-section">
+        <div class="container">
+          <h2 style="text-align: center">Saved Movie Genres</h2>
+          <canvas id="movieChart" width="400" height="200"></canvas>
+        </div>
+      </section>
+    </main>
 
-// get movies from selected genre
-async function getMovies() {
-  const genreId = document.getElementById("genre-select").value;
-  const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`);
-  const data = await response.json();
-  displayMovies(data.results);
-}
-
-// show movie cards
-function displayMovies(movies) {
-  const container = document.getElementById("movies-container");
-  container.innerHTML = "";
-
-  movies.forEach((movie) => {
-    const card = document.createElement("div");
-    card.className = "feature-card";
-    card.innerHTML = `
-      <h3>${movie.title}</h3>
-      <p>${movie.overview || "no description available."}</p>
-      <button class="cta-button">❤️ Save</button>
-    `;
-    card.querySelector("button").addEventListener("click", () => saveMovie(movie));
-    container.appendChild(card);
-  });
-}
-
-// save a movie to supabase (with safe genre handling)
-async function saveMovie(movie) {
-  const genreIds = Array.isArray(movie.genre_ids) ? movie.genre_ids : [];
-  const genreNames = genreIds.map(id => {
-    const match = genreList.find(g => g.id === id);
-    return match ? match.name : "Unknown";
-  });
-
-  const { error } = await supabaseClient
-    .from('likedMovies')
-    .insert([{
-      title: movie.title,
-      overview: movie.overview || "no description available.",
-      genres: genreNames.length ? genreNames.join(', ') : "Unknown"
-    }]);
-
-  if (error) {
-    console.error("error saving movie:", error);
-    alert(`error saving "${movie.title}"`);
-  } else {
-    alert(`saved "${movie.title}" to your watchlist`);
-  }
-}
-
-// get random movie
-async function getRandomMovie() {
-  if (genreList.length === 0) return;
-
-  const randomGenre = genreList[Math.floor(Math.random() * genreList.length)];
-  const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${randomGenre.id}`);
-  const data = await response.json();
-  const movie = data.results[Math.floor(Math.random() * data.results.length)];
-  displayRandomMovie(movie);
-}
-
-// show random movie
-function displayRandomMovie(movie) {
-  const container = document.getElementById("random-movie-result");
-  container.innerHTML = `
-    <div class="feature-card">
-      <h3>${movie.title}</h3>
-      <p>${movie.overview || "no description available."}</p>
-      <button class="cta-button">❤️ Save</button>
-    </div>
-  `;
-  container.querySelector("button").addEventListener("click", () => saveMovie(movie));
-}
-
-// load saved movies
-async function loadSavedMovies() {
-  const savedContainer = document.getElementById("saved-movies-container");
-  const emptyMessage = document.getElementById("empty-message");
-
-  const { data, error } = await supabaseClient.from('likedMovies').select('*');
-
-  if (error || !data) {
-    emptyMessage.textContent = "could not load saved movies";
-    emptyMessage.style.display = "block";
-    return;
-  }
-
-  if (data.length === 0) {
-    emptyMessage.style.display = "block";
-    return;
-  }
-
-  emptyMessage.style.display = "none";
-
-  data.forEach((movie) => {
-    const card = document.createElement("div");
-    card.className = "feature-card";
-    card.innerHTML = `
-      <h3>${movie.title}</h3>
-      <p>${movie.overview || "no description available."}</p>
-      <button class="cta-button" onclick="removeMovie(${movie.id})">🗑️ Remove</button>
-    `;
-    savedContainer.appendChild(card);
-  });
-
-  drawChart(data);
-}
-
-// draw pie chart
-function drawChart(data) {
-  const ctx = document.getElementById('movieChart');
-  if (!ctx) return;
-
-  const genreCount = {};
-  data.forEach(item => {
-    const genres = (item.genres || '').split(', ');
-    genres.forEach(genre => {
-      if (!genre) return;
-      genreCount[genre] = (genreCount[genre] || 0) + 1;
-    });
-  });
-
-  const labels = Object.keys(genreCount);
-  const values = Object.values(genreCount);
-
-  new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Saved Movies by Genre',
-        data: values,
-        backgroundColor: [
-          '#60a5fa', '#f472b6', '#facc15', '#34d399', '#a78bfa',
-          '#f87171', '#f97316', '#2dd4bf', '#4ade80', '#c084fc'
-        ]
-      }]
-    },
-    options: {
-      plugins: {
-        title: {
-          display: true,
-          text: 'your saved movies by genre'
-        }
-      }
-    }
-  });
-}
-
-// delete a saved movie
-async function removeMovie(id) {
-  const { error } = await supabaseClient
-    .from('likedMovies')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error("error deleting movie:", error);
-    alert("couldn't delete");
-  } else {
-    alert("movie deleted");
-    location.reload();
-  }
-}
+    <!-- footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>Movie Night Generator by Hadiya Mohammed</p>
+        <p>
+          Movie data powered by
+          <a href="https://www.themoviedb.org/" target="_blank">TMDB</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

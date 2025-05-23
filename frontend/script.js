@@ -11,21 +11,33 @@ const supabaseClient = createClient(
 // load genre list on page load
 document.addEventListener("DOMContentLoaded", async () => {
   const genreSelect = document.getElementById("genre-select");
-  if (!genreSelect) return;
 
-  const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
-  const data = await response.json();
-  genreList = data.genres;
+  // fetch genres from TMDB
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
+    const data = await response.json();
+    genreList = data.genres;
 
-  genreList.forEach((genre) => {
-    const option = document.createElement("option");
-    option.value = genre.id;
-    option.textContent = genre.name;
-    genreSelect.appendChild(option);
-  });
+    // populate dropdown if it exists
+    if (genreSelect) {
+      genreList.forEach((genre) => {
+        const option = document.createElement("option");
+        option.value = genre.id;
+        option.textContent = genre.name;
+        genreSelect.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error("failed to load genres", err);
+  }
+
+  // load saved movies if we're on the saved page
+  if (window.location.pathname.includes('saved.html')) {
+    loadSavedMovies();
+  }
 });
 
-// get movies for selected genre
+// get movies by genre
 async function getMovies() {
   const genreId = document.getElementById("genre-select").value;
   const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`);
@@ -33,7 +45,7 @@ async function getMovies() {
   displayMovies(data.results);
 }
 
-// show movie cards
+// display movie cards
 function displayMovies(movies) {
   const container = document.getElementById("movies-container");
   container.innerHTML = "";
@@ -51,8 +63,13 @@ function displayMovies(movies) {
   });
 }
 
-// save a movie to supabase
+// save movie to supabase
 async function saveMovie(movie) {
+  if (!genreList.length) {
+    console.warn("genre list not loaded yet.");
+    return;
+  }
+
   const genreNames = movie.genre_ids.map(id => {
     const match = genreList.find(g => g.id === id);
     return match ? match.name : "Unknown";
@@ -74,7 +91,7 @@ async function saveMovie(movie) {
   }
 }
 
-// get a random movie from a random genre
+// get random movie
 async function getRandomMovie() {
   if (genreList.length === 0) return;
 
@@ -85,7 +102,7 @@ async function getRandomMovie() {
   displayRandomMovie(movie);
 }
 
-// show random movie card
+// show random movie
 function displayRandomMovie(movie) {
   const container = document.getElementById("random-movie-result");
   container.innerHTML = `
@@ -98,7 +115,7 @@ function displayRandomMovie(movie) {
   container.querySelector("button").addEventListener("click", () => saveMovie(movie));
 }
 
-// load saved movies from supabase
+// load saved movies
 async function loadSavedMovies() {
   const savedContainer = document.getElementById("saved-movies-container");
   const emptyMessage = document.getElementById("empty-message");
@@ -132,7 +149,7 @@ async function loadSavedMovies() {
   drawChart(data);
 }
 
-// draw pie chart of saved genres
+// pie chart for genres
 function drawChart(data) {
   const ctx = document.getElementById('movieChart');
   if (!ctx) return;
@@ -173,7 +190,7 @@ function drawChart(data) {
   });
 }
 
-// delete a movie
+// remove movie
 async function removeMovie(id) {
   const { error } = await supabaseClient
     .from('likedMovies')
@@ -187,9 +204,4 @@ async function removeMovie(id) {
     alert("movie deleted");
     location.reload();
   }
-}
-
-// only run this when you're on saved.html
-if (window.location.pathname.includes('saved.html')) {
-  loadSavedMovies();
 }

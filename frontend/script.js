@@ -8,12 +8,12 @@ const supabaseClient = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZydHJmdmZtZWJ5cGJtb3lmemZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5MjA3ODIsImV4cCI6MjA2MzQ5Njc4Mn0.9pCPmOV7gZHFqkAJm0GSX1pD1PQaSEw-x1eP_tNYwKk'
 );
 
-// when page loads, show genre list in dropdown
+// show genres in dropdown on load
 document.addEventListener("DOMContentLoaded", async () => {
   const genreSelect = document.getElementById("genre-select");
   if (!genreSelect) return;
 
-  const response = await fetch(https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey});
+  const response = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`);
   const data = await response.json();
   genreList = data.genres;
 
@@ -25,15 +25,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// get movies from selected genre
+// get movies by selected genre
 async function getMovies() {
   const genreId = document.getElementById("genre-select").value;
-  const response = await fetch(https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId});
+  const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${genreId}`);
   const data = await response.json();
   displayMovies(data.results);
 }
 
-// show movie cards on page
+// display movie cards
 function displayMovies(movies) {
   const container = document.getElementById("movies-container");
   container.innerHTML = "";
@@ -41,17 +41,17 @@ function displayMovies(movies) {
   movies.forEach((movie) => {
     const card = document.createElement("div");
     card.className = "feature-card";
-    card.innerHTML = 
+    card.innerHTML = `
       <h3>${movie.title}</h3>
       <p>${movie.overview || "no description available."}</p>
       <button class="cta-button">❤️ Save</button>
-    ;
+    `;
     card.querySelector("button").addEventListener("click", () => saveMovie(movie));
     container.appendChild(card);
   });
 }
 
-// save a movie to supabase with genre info
+// save a movie to supabase
 async function saveMovie(movie) {
   const genreNames = movie.genre_ids.map(id => {
     const match = genreList.find(g => g.id === id);
@@ -68,18 +68,18 @@ async function saveMovie(movie) {
 
   if (error) {
     console.error("error saving movie:", error);
-    alert(error saving "${movie.title}");
+    alert(`error saving "${movie.title}"`);
   } else {
-    alert(saved "${movie.title}" to your watchlist);
+    alert(`saved "${movie.title}" to your watchlist`);
   }
 }
 
-// get a random movie
+// get random movie
 async function getRandomMovie() {
   if (genreList.length === 0) return;
 
   const randomGenre = genreList[Math.floor(Math.random() * genreList.length)];
-  const response = await fetch(https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${randomGenre.id});
+  const response = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&with_genres=${randomGenre.id}`);
   const data = await response.json();
   const movie = data.results[Math.floor(Math.random() * data.results.length)];
   displayRandomMovie(movie);
@@ -88,28 +88,24 @@ async function getRandomMovie() {
 // show random movie card
 function displayRandomMovie(movie) {
   const container = document.getElementById("random-movie-result");
-  container.innerHTML = 
+  container.innerHTML = `
     <div class="feature-card">
       <h3>${movie.title}</h3>
       <p>${movie.overview || "no description available."}</p>
       <button class="cta-button">❤️ Save</button>
     </div>
-  ;
+  `;
   container.querySelector("button").addEventListener("click", () => saveMovie(movie));
 }
 
-// load saved movies from supabase
+// load saved movies
 async function loadSavedMovies() {
-  console.log("loading saved movies...");
   const savedContainer = document.getElementById("saved-movies-container");
   const emptyMessage = document.getElementById("empty-message");
 
-  if (!savedContainer || !emptyMessage) return;
-
   const { data, error } = await supabaseClient.from('likedMovies').select('*');
 
-  if (error) {
-    console.error("error loading saved movies:", error);
+  if (error || !data) {
     emptyMessage.textContent = "could not load saved movies";
     emptyMessage.style.display = "block";
     return;
@@ -125,18 +121,18 @@ async function loadSavedMovies() {
   data.forEach((movie) => {
     const card = document.createElement("div");
     card.className = "feature-card";
-    card.innerHTML = 
+    card.innerHTML = `
       <h3>${movie.title}</h3>
       <p>${movie.overview || "no description available."}</p>
       <button class="cta-button" onclick="removeMovie(${movie.id})">🗑️ Remove</button>
-    ;
+    `;
     savedContainer.appendChild(card);
   });
 
   drawChart(data);
 }
 
-// draw pie chart based on genres
+// draw pie chart
 function drawChart(data) {
   const ctx = document.getElementById('movieChart');
   if (!ctx) return;
@@ -177,7 +173,7 @@ function drawChart(data) {
   });
 }
 
-// delete a movie from supabase
+// remove a movie
 async function removeMovie(id) {
   const { error } = await supabaseClient
     .from('likedMovies')
@@ -193,7 +189,7 @@ async function removeMovie(id) {
   }
 }
 
-// run this on saved.html
+// run only on saved.html
 if (window.location.pathname.includes('saved.html')) {
   loadSavedMovies();
 }
